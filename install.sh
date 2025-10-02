@@ -194,6 +194,8 @@ cd ../..
 
 sudo apt-get install -y python3-dev python3-venv
 
+cd ~/GH200Tester/LambdaTestCodeGH200
+
 # Create the virtual environment
 python3 -m venv "${VENV_PATH}"
 
@@ -202,7 +204,7 @@ source "${VENV_PATH}/bin/activate"
 
 # Upgrade and install
 pip install --upgrade pip
-pip install numpy scipy ase wheel mpi4py dftd4 cupy-12x
+pip install numpy==1.26.4 scipy ase wheel mpi4py dftd4 cupy-cuda12x
 
 #endregion
 
@@ -241,9 +243,10 @@ libraries += ['xc']
 
 # ELPA configuration
 elpa = True
-libraries += ['elpa_openmp']
-library_dirs += ['/usr/local/elpa/lib']
-include_dirs += ['${GPAW_LIBS_PREFIX}/include/elpa-2025.06.001/modules']
+if elpa:
+    libraries += ['elpa_openmp']
+    library_dirs += ['${GPAW_LIBS_PREFIX}/elpa/lib']
+    include_dirs += ['${GPAW_LIBS_PREFIX}/build/elpa-2025.06.001/modules']
 
 # LibvdWXC
 # libvdwxc = True
@@ -258,7 +261,6 @@ if magma:
 
 compiler = 'mpicc'
 mpicompiler = 'mpicc'
-mpilinker = 'mpifort'
 
 libraries += ['scalapack-openmpi', 'blas' ]
 
@@ -277,7 +279,7 @@ if gpu:
     define_macros += [('GPAW_CUDA', '1')]
     libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'cufft']
     library_dirs += ['${CUDA_PATH}/lib64']
-    include_dirs += ['${CUDA_PATH}/include')]
+    include_dirs += ['${CUDA_PATH}/include']
     gpu_target = 'cuda'
     gpu_compiler = 'nvcc'
     gpu_compile_args = ['-O3', '-g', '-gencode', 'arch=compute_90,code=sm_90']
