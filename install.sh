@@ -152,27 +152,22 @@ cd ${INSTALL_PREFIX}/src
 cd elpa-2025.06.001
 ./configure --prefix=${GPAW_LIBS_PREFIX}
             CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort \
-            CFLAGS="-O3 -mtune=native -msse3 -mavx -mavx2 -mfma -mno-avx512f" \
-            CXXFLAGS="-O3 -mtune=native -msse3 -mavx -mavx2 -mfma -mno-avx512f" \
+            CFLAGS="-O3 -mtune=native" \
+            CXXFLAGS="-O3 -mtune=native" \
             FCFLAGS="-O3 -mtune=native" \
             FFLAGS="-O3 -mtune=native" \
             LIBS="-lstdc++ -lm" \
             --enable-openmp \
-            --enable-shared \
-            --enable-static \
-            --disable-avx512 \
             --with-NVIDIA-GPU-compute-capability \
             --enable-gpu-nvidia-cuda \
             --enable-nvidia-gpu-kernels \
             --with-cusolver=yes \
             --with-mpi=yes \
-            --disable-sse \
             --enable-neon-arch64-kernels \
             --enable-sve128-kernels \
             --enable-sve256-kernels \
             --enable-sve512-kernels \
-            --disable-option-checking \
-            --disable-sse --disable-sse-assembly --disable-avx  \
+            --disable-sse --disable-sse-assembly \
             --disable-avx2 CUDA_HOME=${CUDA_PATH}
 make -j${NPROC}
 make install
