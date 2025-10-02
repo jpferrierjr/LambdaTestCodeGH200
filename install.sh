@@ -151,11 +151,12 @@ cd ${INSTALL_PREFIX}/src
 # tar -xzvf elpa-2025.06.001.tar.gz
 cd elpa-2025.06.001
 make distclean || true
-./autogen.sh
-./configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
+mkdir build
+cd build
+../configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
 make -j${NPROC}
 make install
-cd ..
+cd ../..
 
 #--- LIBVDWXC references
 #region LIBVDWXC references install
