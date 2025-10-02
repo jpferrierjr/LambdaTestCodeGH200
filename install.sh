@@ -161,7 +161,7 @@ cd elpa-2025.06.001
             --with-NVIDIA-GPU-compute-capability \
             --enable-gpu-nvidia-cuda \
             --enable-nvidia-gpu-kernels \
-            --with-cuda-compute-capability=90 \
+            --with-cuda-compute-capability=9.0 \
             --with-cusolver=yes \
             --with-mpi=yes \
             --enable-neon-arch64-kernels \
