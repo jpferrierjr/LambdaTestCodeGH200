@@ -151,7 +151,7 @@ wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elp
 tar -xzvf elpa-2025.06.001.tar.gz
 cd elpa-2025.06.001
 ./configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc FC=mpifort CXX=mpicxx \
-            --disable-sse-assembly --enable-gpu-nvidia-cuda CUDA_HOME=${CUDA_PATH}
+            --disable-sse --enable-gpu-nvidia-cuda CUDA_HOME=${CUDA_PATH}
 make -j${NPROC}
 make install
 cd ..
