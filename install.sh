@@ -68,6 +68,7 @@ cd ${INSTALL_PREFIX}/src
 # -- FFTW --
 # GPAW can use FFTW. Compiling it with ARM-specific optimizations is beneficial.
 echo "Downloading and compiling FFTW..."
+rm -rf fftw*
 wget https://www.fftw.org/fftw-3.3.10.tar.gz
 tar -xzvf fftw-3.3.10.tar.gz
 cd fftw-3.3.10
@@ -77,22 +78,71 @@ make install
 cd ..
 
 # -- MAGMA --
-# Matrix Algebra on GPU and Multicore Architectures for GPU-accelerated linear algebra.
-echo "Downloading and compiling MAGMA..."
+rm -rf magma*
 wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
-tar -xzvf magma-2.9.0.tar.gz
+tar -zxvf magma-2.9.0.tar.gz
 cd magma-2.9.0
-# Create a make.inc for NVIDIA HPC SDK on ARM (Hopper architecture for H200)
-# We use nvc/nvfortran directly here, not MPI wrappers, as MAGMA itself is not an MPI library.
-cp make.inc-examples/make.inc.nvcc make.inc
-sed -i 's/GPU_TARGET = Pascal/GPU_TARGET = Hopper/' make.inc
-sed -i 's/CC = gcc/CC = nvc/' make.inc
-sed -i 's/CXX = g++/CXX = nvc++/' make.inc
-sed -i 's/FORT = gfortran/FORT = nvfortran/' make.inc
-echo "prefix = ${GPAW_LIBS_PREFIX}" >> make.inc
+
+echo "Patching MAGMA for CUDA 13.0 compatibility..."
+if grep -q "clockRate" interface_cuda/interface.cpp; then
+    ecgi "Patching interface.cpp to fix clockRate issue..."
+    sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
+    # Replace the problematic clockRate line with a compatible version
+    sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
+fi
+
+# Use CMake build system which handles CUDA compatibility better
+mkdir build
+cd build
+
+# Configure with CMake for better CUDA 13.0 compatibility
+cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DGPU_TARGET="Hopper" \
+    -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
+    -DUSE_CUDA=ON \
+    -DMAGMA_ENABLE_CUDA=ON \
+    -DBLA_VENDOR=OpenBLAS \
+    -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
+    -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
+    -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
+    -DOpenBLAS_ROOT=/usr/local/openblas
+
+# Configure MAGMA make.inc for our setup
+cat > make.inc << EOF
+CC        = gcc
+CXX       = g++
+NVCC      = nvcc
+FORT      = gfortran
+
+ARCH      = ar
+ARCHFLAGS = cr
+RANLIB    = ranlib
+
+OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
+F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
+FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
+NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
+
+GPU_TARGET = Hopper
+
+LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
+
+CUDADIR   = $CUDA_PATH
+OPENBLASDIR = /usr/share/doc/libopenblas-dev
+
+LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
+INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
+DEVCCFLAGS = -std=c++14 -DADD_
+EOF
+
 make -j${NPROC}
-make install
+sudo make install prefix=/usr/local/magma
 cd ..
+
+
+
 
 # -- ELPA --
 # Eigensolver for Petaflop-Scale Applications.
