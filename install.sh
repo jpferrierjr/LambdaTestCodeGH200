@@ -151,8 +151,7 @@ cd ${INSTALL_PREFIX}/src
 # tar -xzvf elpa-2025.06.001.tar.gz
 cd elpa-2025.06.001
 make distclean || true
-./configure --prefix=${GPAW_LIBS_PREFIX}
-CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --with-NVIDIA-GPU-compute-capability --enable-gpu-nvidia-cuda --enable-nvidia-gpu-kernels --with-cuda-compute-capability=9.0 --with-cusolver=yes --with-mpi=yes --enable-neon-arch64-kernels --enable-sve128-kernels --enable-sve256-kernels --enable-sve512-kernels --disable-sse --disable-sse-assembly --disable-avx2 CUDA_HOME=${CUDA_PATH}
+./configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --with-NVIDIA-GPU-compute-capability --enable-gpu-nvidia-cuda --enable-nvidia-gpu-kernels --with-cuda-compute-capability=9.0 --with-cusolver=yes --with-mpi=yes --enable-neon-arch64-kernels --enable-sve128-kernels --enable-sve256-kernels --enable-sve512-kernels --disable-sse --disable-sse-assembly --disable-avx2 CUDA_HOME=${CUDA_PATH}
 make -j${NPROC}
 make install
 cd ..
