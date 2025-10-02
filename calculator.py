@@ -1,7 +1,10 @@
 from ase.units import kB
 from gpaw.new.ase_interface import GPAW # Using new one for GPU
+from dftd4.ase import DFTD4
 from gpaw import PW
 import numpy as np
+from ase import Atoms
+import os
 
 
 xc_list     = { 
@@ -132,7 +135,7 @@ def crystal_optimizer(
             for i, E in enumerate( ENS ):
 
                 # Build calculator with vDW correction
-                gcalc       = get_calculator( xc = xc, encut = E, is_crystal = True, initial_opt = True )
+                gcalc       = get_calculator( xc = xc, encut = E, initial_opt = True )
                 calc        = DFTD4( method = 'pbe' ).add_calculator( gcalc )
 
                 crystal.set_calculator( calc )
@@ -168,7 +171,7 @@ def crystal_optimizer(
                 for i, V in enumerate( VAC ):
                     
                     # Build calculator with vDW correction
-                    gcalc       = get_calculator( xc = xc, encut = return_vals[xc]['cutoff_energy'], is_crystal = True, initial_opt = True )
+                    gcalc       = get_calculator( xc = xc, encut = return_vals[xc]['cutoff_energy'], initial_opt = True )
                     calc        = DFTD4( method = 'pbe' ).add_calculator( gcalc )
                     
                     crystal.set_calculator( calc )

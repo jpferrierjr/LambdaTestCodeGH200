@@ -111,7 +111,7 @@ class mainGPUTest:
                     if os.path.isfile( xc_traj_file ):
                         crystal:Atoms = read( xc_traj_file, index = "-1" )
                         
-                    gpw_calc    = get_calculator( xc = xc, encut = self.bulk_calc_vals[bulk][xc]['cutoff_energy'], is_crystal = True )
+                    gpw_calc    = get_calculator( xc = xc, encut = self.bulk_calc_vals[bulk][xc]['cutoff_energy'] )
                     calc        = DFTD4( method = 'PBE' ).add_calculator( gpw_calc )
 
                     crystal.set_calculator( calc )
@@ -193,7 +193,7 @@ class mainGPUTest:
                     xc_traj_file    = os.path.join( traj_path, f'{xc}_relaxation.traj' )
 
                     # Read the respective trajectory file's last indice
-                    blk             = read( xc_traj_file, index = "-1" )
+                    blk:Atoms             = read( xc_traj_file, index = "-1" )
 
                     # Remove FixSymmetry contraints
                     del blk.constraints
@@ -323,7 +323,7 @@ class mainGPUTest:
                         }
 
                     # Set the calculator (follow encut for bulk material)
-                    gpw_calc    = get_calculator( xc = xc, encut = pw_cutoff, is_crystal = True, custom_params = custom_params )
+                    gpw_calc    = get_calculator( xc = xc, encut = pw_cutoff )
                     calc        = DFTD4( method = 'PBE' ).add_calculator( gpw_calc )
 
                     het.set_calculator( calc )
@@ -354,7 +354,7 @@ class mainGPUTest:
                         if sub_sv_name not in self.sub_Es[bulk][xc]:
                             het_copy                        = het.copy()
                             sub_copy                        = het_copy[:sub_atom_cnt]
-                            gpw_calc                        = get_calculator( xc = xc, encut = bulk_calc_vals[bulk][xc]['cutoff_energy'], is_crystal = True )
+                            gpw_calc                        = get_calculator( xc = xc, encut = self.bulk_calc_vals[bulk][xc]['cutoff_energy'] )
                             sub_copy.set_calculator( gpw_calc )
                             self.sub_Es[bulk][xc][sub_sv_name]   = sub_copy.get_potential_energy()
 
@@ -375,7 +375,7 @@ class mainGPUTest:
                         if mat_sv_name not in self.qmat_Es[qmat][xc]:
                             het_copy                        = het.copy()
                             mat_copy                        = het_copy[sub_atom_cnt:]
-                            gpw_calc                        = get_calculator( xc = xc, encut = self.qm_calc_vals[qmat][xc]['cutoff_energy'], is_crystal = True )
+                            gpw_calc                        = get_calculator( xc = xc, encut = self.qm_calc_vals[qmat][xc]['cutoff_energy'] )
                             mat_copy.set_calculator( gpw_calc )
                             self.qmat_Es[qmat][xc][mat_sv_name]  = mat_copy.get_potential_energy()
 
