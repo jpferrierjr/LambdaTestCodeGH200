@@ -167,6 +167,10 @@ cd elpa-2025.06.001
             --with-cusolver=yes \
             --with-mpi=yes \
             --disable-sse \
+            --enable-neon-arch64-kernels \
+            --enable-sve128-kernels \
+            --enable-sve256-kernels \
+            --enable-sve512-kernels \
             --disable-option-checking \
             --disable-sse --disable-sse-assembly --disable-avx  \
             --disable-avx2 CUDA_HOME=${CUDA_PATH}
