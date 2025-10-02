@@ -83,13 +83,13 @@ wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
 tar -zxvf magma-2.9.0.tar.gz
 cd magma-2.9.0
 
-echo "Patching MAGMA for CUDA 13.0 compatibility..."
-if grep -q "clockRate" interface_cuda/interface.cpp; then
-    ecgi "Patching interface.cpp to fix clockRate issue..."
-    sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
-    # Replace the problematic clockRate line with a compatible version
-    sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
-fi
+# echo "Patching MAGMA for CUDA 13.0 compatibility..."
+# if grep -q "clockRate" interface_cuda/interface.cpp; then
+#     ecgi "Patching interface.cpp to fix clockRate issue..."
+#     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
+#     # Replace the problematic clockRate line with a compatible version
+#     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
+# fi
 
 # Use CMake build system which handles CUDA compatibility better
 mkdir build
