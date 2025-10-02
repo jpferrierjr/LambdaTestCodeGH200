@@ -146,9 +146,9 @@ cd ${INSTALL_PREFIX}/src
 
 # -- ELPA --
 # Eigensolver for Petaflop-Scale Applications.
-# echo "Downloading and compiling ELPA..."
-# wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
-# tar -xzvf elpa-2025.06.001.tar.gz
+echo "Downloading and compiling ELPA..."
+wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
+tar -xzvf elpa-2025.06.001.tar.gz
 cd elpa-2025.06.001
 make distclean || true
 mkdir build
