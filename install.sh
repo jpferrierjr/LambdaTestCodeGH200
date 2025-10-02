@@ -166,6 +166,7 @@ cd elpa-2025.06.001
             --enable-nvidia-gpu-kernels \
             --with-cusolver=yes \
             --with-mpi=yes \
+            --disable-sse \
             --disable-option-checking \
             --disable-sse --disable-sse-assembly --disable-avx  \
             --disable-avx2 CUDA_HOME=${CUDA_PATH}
