@@ -7,7 +7,7 @@ set -e  # Exit on any error
 CUDA_PATH="/usr/local/cuda"
 
 PROFILE_FILE="${HOME}/.bashrc"
-INSTALL_PREFIX=${HOME}/opt/gpaw_h200
+INSTALL_PREFIX="${HOME}/opt/gpaw_h200"
 GPAW_LIBS_PREFIX=${INSTALL_PREFIX}
 
 #VDW_BUILD_DIR="/tmp/vdw_build_$$"
@@ -37,21 +37,21 @@ print_status() {
 #endregion
 
 
-# sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar
-# sudo apt-get install libblas-dev liblapack-dev libscalapack-mpi-dev libscalapack-openmpi-dev
+sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar
+sudo apt-get install libblas-dev liblapack-dev libscalapack-mpi-dev libscalapack-openmpi-dev
 
-# echo "Updating package lists..."
-# sudo apt-get update
-# echo "Installing OpenBLAS and OpenMPI..."
-# sudo apt-get install -y libopenblas-dev libopenmpi-dev libudev-dev
+echo "Updating package lists..."
+sudo apt-get update
+echo "Installing OpenBLAS and OpenMPI..."
+sudo apt-get install -y libopenblas-dev libopenmpi-dev libudev-dev
 
 # echo "🎉 OpenBLAS and OpenMPI installation complete."
 
 
 
 # #--- XC/FFTW3 references
-# #region XC & FFTW3 references install
-# sudo apt-get install -y libxc-dev libfftw3-mpi-dev
+#region XC & FFTW3 references install
+sudo apt-get install -y libxc-dev libfftw3-mpi-dev
 
 #endregion
 
@@ -78,68 +78,67 @@ cd ${INSTALL_PREFIX}/src
 # cd ..
 
 # -- MAGMA --
-# rm -rf magma*
-# wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
-# tar -zxvf magma-2.9.0.tar.gz
-# cd magma-2.9.0
+wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
+tar -zxvf magma-2.9.0.tar.gz
+cd magma-2.9.0
 
-# # echo "Patching MAGMA for CUDA 13.0 compatibility..."
-# # if grep -q "clockRate" interface_cuda/interface.cpp; then
-# #     ecgi "Patching interface.cpp to fix clockRate issue..."
-# #     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
-# #     # Replace the problematic clockRate line with a compatible version
-# #     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
-# # fi
+# echo "Patching MAGMA for CUDA 13.0 compatibility..."
+# if grep -q "clockRate" interface_cuda/interface.cpp; then
+#     ecgi "Patching interface.cpp to fix clockRate issue..."
+#     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
+#     # Replace the problematic clockRate line with a compatible version
+#     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
+# fi
 
-# # Use CMake build system which handles CUDA compatibility better
-# mkdir build
-# cd build
+# Use CMake build system which handles CUDA compatibility better
+mkdir build
+cd build
 
-# # Configure with CMake for better CUDA 13.0 compatibility
-# cmake .. \
-#     -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DGPU_TARGET="Hopper" \
-#     -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
-#     -DUSE_CUDA=ON \
-#     -DMAGMA_ENABLE_CUDA=ON \
-#     -DBLA_VENDOR=OpenBLAS \
-#     -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
-#     -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
-#     -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
-#     -DOpenBLAS_ROOT=/usr/local/openblas
+# Configure with CMake for better CUDA 13.0 compatibility
+cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DGPU_TARGET="Hopper" \
+    -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
+    -DUSE_CUDA=ON \
+    -DMAGMA_ENABLE_CUDA=ON \
+    -DBLA_VENDOR=OpenBLAS \
+    -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
+    -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
+    -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
+    -DOpenBLAS_ROOT=/usr/local/openblas
 
-# # Configure MAGMA make.inc for our setup
-# cat > make.inc << EOF
-# CC        = gcc
-# CXX       = g++
-# NVCC      = nvcc
-# FORT      = gfortran
+# Configure MAGMA make.inc for our setup
+cat > make.inc << EOF
+CC        = gcc
+CXX       = g++
+NVCC      = nvcc
+FORT      = gfortran
 
-# ARCH      = ar
-# ARCHFLAGS = cr
-# RANLIB    = ranlib
+ARCH      = ar
+ARCHFLAGS = cr
+RANLIB    = ranlib
 
-# OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
-# F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
-# FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
-# NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
+OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
+F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
+FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
+NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
 
-# GPU_TARGET = Hopper
+GPU_TARGET = Hopper
 
-# LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
+LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
 
-# CUDADIR   = $CUDA_PATH
-# OPENBLASDIR = /usr/share/doc/libopenblas-dev
+CUDADIR   = $CUDA_PATH
+OPENBLASDIR = /usr/share/doc/libopenblas-dev
 
-# LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
-# INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
-# DEVCCFLAGS = -std=c++14 -DADD_
-# EOF
+LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
+INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
+DEVCCFLAGS = -std=c++14 -DADD_
+EOF
 
-# make -j${NPROC}
-# sudo make install prefix=/usr/local/magma
-# cd ..
+make -j${NPROC}
+sudo make install prefix=/usr/local/magma
+cd ..
 
 
 
@@ -194,7 +193,7 @@ cd ../..
 
 sudo apt-get install -y python3-dev python3-venv
 
-cd ~/GH200Tester/LambdaTestCodeGH200
+cd ~/GH200/LambdaTestCodeGH200
 
 # Create the virtual environment
 python3 -m venv "${VENV_PATH}"
