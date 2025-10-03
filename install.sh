@@ -77,85 +77,85 @@ cd ${INSTALL_PREFIX}/src
 # make install
 # cd ..
 
--- MAGMA --
-wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
-tar -zxvf magma-2.9.0.tar.gz
-cd magma-2.9.0
+#-- MAGMA --
+# wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
+# tar -zxvf magma-2.9.0.tar.gz
+# cd magma-2.9.0
 
-# echo "Patching MAGMA for CUDA 13.0 compatibility..."
-# if grep -q "clockRate" interface_cuda/interface.cpp; then
-#     ecgi "Patching interface.cpp to fix clockRate issue..."
-#     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
-#     # Replace the problematic clockRate line with a compatible version
-#     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
-# fi
+# # echo "Patching MAGMA for CUDA 13.0 compatibility..."
+# # if grep -q "clockRate" interface_cuda/interface.cpp; then
+# #     ecgi "Patching interface.cpp to fix clockRate issue..."
+# #     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
+# #     # Replace the problematic clockRate line with a compatible version
+# #     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
+# # fi
 
-# Use CMake build system which handles CUDA compatibility better
-mkdir build
-cd build
+# # Use CMake build system which handles CUDA compatibility better
+# mkdir build
+# cd build
 
-# Configure with CMake for better CUDA 13.0 compatibility
-cmake .. \
-    -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DGPU_TARGET="Hopper" \
-    -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
-    -DUSE_CUDA=ON \
-    -DMAGMA_ENABLE_CUDA=ON \
-    -DBLA_VENDOR=OpenBLAS \
-    -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
-    -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
-    -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
-    -DOpenBLAS_ROOT=/usr/local/openblas
+# # Configure with CMake for better CUDA 13.0 compatibility
+# cmake .. \
+#     -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
+#     -DCMAKE_BUILD_TYPE=Release \
+#     -DGPU_TARGET="Hopper" \
+#     -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
+#     -DUSE_CUDA=ON \
+#     -DMAGMA_ENABLE_CUDA=ON \
+#     -DBLA_VENDOR=OpenBLAS \
+#     -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
+#     -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
+#     -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
+#     -DOpenBLAS_ROOT=/usr/local/openblas
 
-# Configure MAGMA make.inc for our setup
-cat > make.inc << EOF
-CC        = gcc
-CXX       = g++
-NVCC      = nvcc
-FORT      = gfortran
+# # Configure MAGMA make.inc for our setup
+# cat > make.inc << EOF
+# CC        = gcc
+# CXX       = g++
+# NVCC      = nvcc
+# FORT      = gfortran
 
-ARCH      = ar
-ARCHFLAGS = cr
-RANLIB    = ranlib
+# ARCH      = ar
+# ARCHFLAGS = cr
+# RANLIB    = ranlib
 
-OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
-F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
-FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
-NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
+# OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
+# F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
+# FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
+# NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
 
-GPU_TARGET = Hopper
+# GPU_TARGET = Hopper
 
-LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
+# LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
 
-CUDADIR   = $CUDA_PATH
-OPENBLASDIR = /usr/share/doc/libopenblas-dev
+# CUDADIR   = $CUDA_PATH
+# OPENBLASDIR = /usr/share/doc/libopenblas-dev
 
-LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
-INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
-DEVCCFLAGS = -std=c++14 -DADD_
-EOF
+# LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
+# INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
+# DEVCCFLAGS = -std=c++14 -DADD_
+# EOF
 
-make -j${NPROC}
-sudo make install prefix=/usr/local/magma
-cd ..
-
-
+# make -j${NPROC}
+# sudo make install prefix=/usr/local/magma
+# cd ..
 
 
-# -- ELPA --
-# Eigensolver for Petaflop-Scale Applications.
-echo "Downloading and compiling ELPA..."
-wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
-tar -xzvf elpa-2025.06.001.tar.gz
-cd elpa-2025.06.001
-make distclean || true
-mkdir build
-cd build
-../configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
-make -j${NPROC}
-make install
-cd ../..
+
+
+# # -- ELPA --
+# # Eigensolver for Petaflop-Scale Applications.
+# echo "Downloading and compiling ELPA..."
+# wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
+# tar -xzvf elpa-2025.06.001.tar.gz
+# cd elpa-2025.06.001
+# make distclean || true
+# mkdir build
+# cd build
+# ../configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
+# make -j${NPROC}
+# make install
+# cd ../..
 
 #--- LIBVDWXC references
 # region LIBVDWXC references install
