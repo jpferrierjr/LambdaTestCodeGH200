@@ -193,7 +193,7 @@ source ~/.bashrc
 
 # sudo apt-get install -y python3-dev python3-venv
 
-cd ~/GH200/LambdaTestCodeGH200
+cd /home/ubuntu/GH200/LambdaTestCodeGH200
 
 # Create the virtual environment
 python3 -m venv "${VENV_PATH}"
