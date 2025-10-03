@@ -195,15 +195,15 @@ source ~/.bashrc
 
 cd ~/GH200/LambdaTestCodeGH200
 
-# # Create the virtual environment
-# python3 -m venv "${VENV_PATH}"
+# Create the virtual environment
+python3 -m venv "${VENV_PATH}"
 
-# # Activate the virtual environment 
-# source "${VENV_PATH}/bin/activate"
+# Activate the virtual environment 
+source "${VENV_PATH}/bin/activate"
 
-# # Upgrade and install
-# pip install --upgrade pip
-# pip install numpy==1.26.4 scipy ase wheel mpi4py dftd4 cupy-cuda12x
+# Upgrade and install
+pip install --upgrade pip
+pip install numpy==1.26.4 scipy ase wheel mpi4py dftd4 cupy-cuda12x
 
 #endregion
 
