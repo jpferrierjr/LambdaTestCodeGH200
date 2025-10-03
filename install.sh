@@ -67,15 +67,14 @@ cd ${INSTALL_PREFIX}/src
 
 # -- FFTW --
 # GPAW can use FFTW. Compiling it with ARM-specific optimizations is beneficial.
-# echo "Downloading and compiling FFTW..."
-# rm -rf fftw*
-# wget https://www.fftw.org/fftw-3.3.10.tar.gz
-# tar -xzvf fftw-3.3.10.tar.gz
-# cd fftw-3.3.10
-# ./configure --prefix=${GPAW_LIBS_PREFIX} --enable-mpi --enable-openmp --enable-shared --enable-neon
-# make -j${NPROC}
-# make install
-# cd ..
+echo "Downloading and compiling FFTW..."
+wget https://www.fftw.org/fftw-3.3.10.tar.gz
+tar -xzvf fftw-3.3.10.tar.gz
+cd fftw-3.3.10
+./configure --prefix=/usr/local/fftw --enable-mpi --enable-openmp --enable-shared --enable-neon
+make -j${NPROC}
+make install
+cd ${INSTALL_PREFIX}/src
 
 #-- MAGMA --
 # wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
@@ -138,33 +137,34 @@ cd ${INSTALL_PREFIX}/src
 
 # make -j${NPROC}
 # sudo make install prefix=/usr/local/magma
-# cd ..
+cd ${INSTALL_PREFIX}/src
 
 
 
 
-# # -- ELPA --
-# # Eigensolver for Petaflop-Scale Applications.
-# echo "Downloading and compiling ELPA..."
-# wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
-# tar -xzvf elpa-2025.06.001.tar.gz
-# cd elpa-2025.06.001
-# make distclean || true
-# mkdir build
-# cd build
-# ../configure --prefix=${GPAW_LIBS_PREFIX} CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
-# make -j${NPROC}
-# make install
-# cd ../..
+# -- ELPA --
+# Eigensolver for Petaflop-Scale Applications.
+echo "Downloading and compiling ELPA..."
+cd ${INSTALL_PREFIX}/src
+wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
+tar -xzvf elpa-2025.06.001.tar.gz
+cd elpa-2025.06.001
+make distclean || true
+mkdir build
+cd build
+../configure --prefix=/usr/local/elpa CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
+make -j${NPROC}
+make install
+cd ${INSTALL_PREFIX}/src
 
 #--- LIBVDWXC references
 # region LIBVDWXC references install
 
 # Install LibvdWXC
-# print_status "Installing LibvdWXC..."
-# rm -rf "${VDW_BUILD_DIR}"
+# echo "Installing LibvdWXC..."
+# cd ${INSTALL_PREFIX}/src
 # git clone https://gitlab.com/libvdwxc/libvdwxc.git "${VDW_BUILD_DIR}"
-# cd "${VDW_BUILD_DIR}"
+# cd ${INSTALL_PREFIX}/src
 
 # git clean -fdx
 
@@ -234,7 +234,10 @@ include_dirs += ['/usr/include']
 
 # FFTW3
 fftw = True
-libraries += ['fftw3']
+if fftw:
+    libraries += ['fftw3']
+    library_dirs += ['/usr/local/fftw/lib']
+    include_dirs += ['/usr/local/fftw/include']
 
 # LibXC
 libxc = True
@@ -244,8 +247,8 @@ libraries += ['xc']
 elpa = True
 if elpa:
     libraries += ['elpa_openmp']
-    library_dirs += ['${GPAW_LIBS_PREFIX}/elpa/lib']
-    include_dirs += ['${GPAW_LIBS_PREFIX}/build/elpa-2025.06.001/modules']
+    library_dirs += ['/usr/local/elpa/lib']
+    include_dirs += ['/usr/local/elpa/modules']
 
 # LibvdWXC
 # libvdwxc = True
@@ -255,8 +258,8 @@ if elpa:
 magma = True
 if magma:
     libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'magma']
-    library_dirs += ['${CUDA_PATH}/lib64', '/usr/local/magma/lib']
-    include_dirs += ['${CUDA_PATH}/include', '/usr/local/magma/include']
+    library_dirs += ['/usr/local/magma/lib']
+    include_dirs += ['/usr/local/magma/include']
 
 compiler = 'mpicc'
 mpicompiler = 'mpicc'
@@ -277,8 +280,8 @@ define_macros += [('GPAW_NO_UNDERSCORE_CSCALAPACK', '1')]
 if gpu:
     define_macros += [('GPAW_CUDA', '1')]
     libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'cufft']
-    library_dirs += ['${CUDA_PATH}/lib64']
-    include_dirs += ['${CUDA_PATH}/include']
+    library_dirs += ['/usr/local/cuda/lib64']
+    include_dirs += ['/usr/local/cuda/include']
     gpu_target = 'cuda'
     gpu_compiler = 'nvcc'
     gpu_compile_args = ['-O3', '-g', '-gencode', 'arch=compute_90,code=sm_90']
