@@ -37,7 +37,7 @@ source ~/.bashrc
 # #endregion
 
 sudo apt-get update -y
-sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar g++ libstdc++-12-dev automake
+sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar #g++ libstdc++-12-dev automake
 sudo apt-get install -y libblas-dev liblapack-dev libscalapack-mpi-dev libscalapack-openmpi-dev 
 sudo apg-get update -y
 echo "Installing OpenBLAS and OpenMPI..."
