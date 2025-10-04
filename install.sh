@@ -65,22 +65,22 @@ cd ${INSTALL_PREFIX}/src
 
 # -- FFTW --
 # GPAW can use FFTW. Compiling it with ARM-specific optimizations is beneficial.
-if [ -d /usr/local/fftw ]; then
-echo "FFTW3 directory already exists."
-else
-if [ -d ${INSTALL_PREFIX}/src/fftw-3.3.10 ]; then
-cd fftw-3.3.10
-else
-echo "Downloading and compiling FFTW..."
-wget https://www.fftw.org/fftw-3.3.10.tar.gz
-tar -xzvf fftw-3.3.10.tar.gz
-cd fftw-3.3.10
-fi
-./configure --prefix=/usr/local/fftw --enable-mpi --enable-openmp --enable-shared --enable-neon
-make -j${NPROC}
-make install
-cd ${INSTALL_PREFIX}/src
-fi
+# if [ -d /usr/local/fftw ]; then
+# echo "FFTW3 directory already exists."
+# else
+# if [ -d ${INSTALL_PREFIX}/src/fftw-3.3.10 ]; then
+# cd fftw-3.3.10
+# else
+# echo "Downloading and compiling FFTW..."
+# wget https://www.fftw.org/fftw-3.3.10.tar.gz
+# tar -xzvf fftw-3.3.10.tar.gz
+# cd fftw-3.3.10
+# fi
+# ./configure --prefix=/usr/local/fftw --enable-mpi --enable-openmp --enable-shared --enable-neon
+# make -j${NPROC}
+# make install
+# cd ${INSTALL_PREFIX}/src
+# fi
 
 # Set these for further installs
 CPPFLAGS="-I/usr/local/fftw3/include"
@@ -94,13 +94,13 @@ cd ${INSTALL_PREFIX}/src
 if [ -d /usr/local/elpa ]; then
 echo "ELPA directory already exists."
 else
-if [ -d ${INSTALL_PREFIX}/src/elpa-2025.06.001 ]; then
-cd elpa-2025.06.001
+if [ -d ${INSTALL_PREFIX}/src/elpa-2023.11.001 ]; then
+cd elpa-2023.11.001
 else
 echo "Downloading and compiling ELPA..."
-wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
-tar -xzvf elpa-2025.06.001.tar.gz
-cd elpa-2025.06.001
+wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2023.11.001/elpa-2023.11.001.tar.gz
+tar -xzvf elpa-2023.11.001.tar.gz
+cd elpa-2023.11.001
 fi
 make distclean || true
 mkdir -p build
@@ -250,10 +250,10 @@ export LIBRARY_PATH=/usr/local/cuda/lib64:$LIBRARY_PATH
 
 export C_INCLUDE_PATH=/usr/local/fftw/include:$C_INCLUDE_PATH
 export C_INCLUDE_PATH=/usr/local/magma/include:$C_INCLUDE_PATH
-export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/:$C_INCLUDE_PATH
-export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/:$C_INCLUDE_PATH
-export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/modules:$C_INCLUDE_PATH
-export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/include:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2023.11.001/:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2023.11.001/elpa/:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2023.11.001/modules:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2023.11.001/elpa/include:$C_INCLUDE_PATH
 export C_INCLUDE_PATH=/usr/local/cuda/include:$C_INCLUDE_PATH
 
 export GPAW_CONFIG=/home/ubuntu/.gpaw/siteconfig.py
@@ -282,7 +282,7 @@ include_dirs    += ['/usr/include']
 if elpa:
     libraries       += ['elpa_openmp']
     library_dirs    += ['/usr/local/elpa/lib']
-    include_dirs    += ['/usr/local/elpa/include/elpa_openmp-2025.06.001/modules', '/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/include', '/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/']
+    include_dirs    += ['/usr/local/elpa/include/elpa_openmp-2023.11.001/modules', '/usr/local/elpa/include/elpa_openmp-2023.11.001/elpa/include', '/usr/local/elpa/include/elpa_openmp-2023.11.001/elpa']
 
 # Scalapack
 if scalapack:
@@ -306,7 +306,7 @@ if fftw:
 if libxc:
     libraries += ['xc']
 
-libraries   += [ 'blas' ]
+libraries   += ['blas']
 
 # MPI
 if mpi:
