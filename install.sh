@@ -36,12 +36,10 @@ source ~/.bashrc
 # }
 # #endregion
 
-
-sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar
-sudo apt-get install libblas-dev liblapack-dev libscalapack-mpi-dev libscalapack-openmpi-dev
-
-echo "Updating package lists..."
-sudo apt-get update
+sudo apt-get update -y
+sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar g++ libstdc++-12-dev automake
+sudo apt-get install -y libblas-dev liblapack-dev libscalapack-mpi-dev libscalapack-openmpi-dev 
+sudo apg-get update -y
 echo "Installing OpenBLAS and OpenMPI..."
 sudo apt-get install -y libopenblas-dev libopenmpi-dev libudev-dev
 
@@ -83,6 +81,37 @@ make -j${NPROC}
 make install
 cd ${INSTALL_PREFIX}/src
 fi
+
+# Set these for further installs
+CPPFLAGS="-I/usr/local/fftw3/include"
+LDFLAGS="-L/usr/local/fftw3/lib"
+export CC=mpicc
+export FC=mpif90
+
+# -- ELPA --
+# Eigensolver for Petaflop-Scale Applications.
+cd ${INSTALL_PREFIX}/src
+if [ -d /usr/local/elpa ]; then
+echo "ELPA directory already exists."
+else
+if [ -d ${INSTALL_PREFIX}/src/elpa-2025.06.001 ]; then
+cd elpa-2025.06.001
+else
+echo "Downloading and compiling ELPA..."
+wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
+tar -xzvf elpa-2025.06.001.tar.gz
+cd elpa-2025.06.001
+fi
+make distclean || true
+mkdir -p build
+cd build
+../configure --prefix=/usr/local/elpa CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
+make -j${NPROC}
+make install
+cd ${INSTALL_PREFIX}/src
+fi
+
+
 
 #-- MAGMA --
 if [ -d /usr/local/magma ]; then
@@ -150,28 +179,7 @@ fi
 
 
 
-# -- ELPA --
-# Eigensolver for Petaflop-Scale Applications.
-cd ${INSTALL_PREFIX}/src
-if [ -d /usr/local/elpa ]; then
-echo "ELPA directory already exists."
-else
-if [ -d ${INSTALL_PREFIX}/src/elpa-2025.06.001 ]; then
-cd elpa-2025.06.001
-else
-echo "Downloading and compiling ELPA..."
-wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
-tar -xzvf elpa-2025.06.001.tar.gz
-cd elpa-2025.06.001
-fi
-make distclean || true
-mkdir -p build
-cd build
-../configure --prefix=/usr/local/elpa CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
-make -j${NPROC}
-make install
-cd ${INSTALL_PREFIX}/src
-fi
+
 
 #--- LIBVDWXC references
 # region LIBVDWXC references install
@@ -307,7 +315,7 @@ if mpi:
     extra_link_args     = ['-fopenmp']
 
 # LibvdWXC
-if libvdwxc:
+# if libvdwxc:
 #   libraries += ['vdwxc']
 
 # GPU
