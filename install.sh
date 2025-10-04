@@ -67,95 +67,111 @@ cd ${INSTALL_PREFIX}/src
 
 # -- FFTW --
 # GPAW can use FFTW. Compiling it with ARM-specific optimizations is beneficial.
+if [ -d /usr/local/fftw ]; then
+echo "FFTW3 directory already exists."
+else
+if [ -d ${INSTALL_PREFIX}/src/fftw-3.3.10 ]; then
+cd fftw-3.3.10
+else
 echo "Downloading and compiling FFTW..."
 wget https://www.fftw.org/fftw-3.3.10.tar.gz
 tar -xzvf fftw-3.3.10.tar.gz
 cd fftw-3.3.10
+fi
 ./configure --prefix=/usr/local/fftw --enable-mpi --enable-openmp --enable-shared --enable-neon
 make -j${NPROC}
 make install
 cd ${INSTALL_PREFIX}/src
+fi
 
 #-- MAGMA --
-# wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
-# tar -zxvf magma-2.9.0.tar.gz
-# cd magma-2.9.0
+if [ -d /usr/local/magma ]; then
+echo "MAGMA directory already exists."
+else
 
-# # echo "Patching MAGMA for CUDA 13.0 compatibility..."
-# # if grep -q "clockRate" interface_cuda/interface.cpp; then
-# #     ecgi "Patching interface.cpp to fix clockRate issue..."
-# #     sed -i 's/prop\.clockRate/prop\.clockRate/g' interface_cuda/interface.cpp
-# #     # Replace the problematic clockRate line with a compatible version
-# #     sed -i '/prop\.clockRate.*1000\.,/c\                0.0,' interface_cuda/interface.cpp
-# # fi
+if [ -d {INSTALL_PREFIX}/src/magma-2.9.0 ]; then
+cd magma-2.9.0
+else
+wget https://icl.utk.edu/projectsfiles/magma/downloads/magma-2.9.0.tar.gz
+tar -zxvf magma-2.9.0.tar.gz
+cd magma-2.9.0
+# Use CMake build system which handles CUDA compatibility better
+mkdir -p build
+cd build
+fi
 
-# # Use CMake build system which handles CUDA compatibility better
-# mkdir build
-# cd build
+# Configure with CMake for better CUDA 13.0 compatibility
+cmake .. \
+-DCMAKE_INSTALL_PREFIX=/usr/local/magma \
+-DCMAKE_BUILD_TYPE=Release \
+-DGPU_TARGET="Hopper" \
+-DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
+-DUSE_CUDA=ON \
+-DMAGMA_ENABLE_CUDA=ON \
+-DBLA_VENDOR=OpenBLAS \
+-DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
+-DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
+-DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
+-DOpenBLAS_ROOT=/usr/local/openblas
 
-# # Configure with CMake for better CUDA 13.0 compatibility
-# cmake .. \
-#     -DCMAKE_INSTALL_PREFIX=/usr/local/magma \
-#     -DCMAKE_BUILD_TYPE=Release \
-#     -DGPU_TARGET="Hopper" \
-#     -DCUDA_TOOLKIT_ROOT_DIR=$CUDA_PATH \
-#     -DUSE_CUDA=ON \
-#     -DMAGMA_ENABLE_CUDA=ON \
-#     -DBLA_VENDOR=OpenBLAS \
-#     -DCMAKE_C_FLAGS="-O3 -DADD_ -fPIC" \
-#     -DCMAKE_CXX_FLAGS="-O3 -DADD_ -fPIC -std=c++11" \
-#     -DCMAKE_Fortran_FLAGS="-O3 -DADD_ -fPIC" \
-#     -DOpenBLAS_ROOT=/usr/local/openblas
+# Configure MAGMA make.inc for our setup
+cat > make.inc << EOF
+CC        = gcc
+CXX       = g++
+NVCC      = nvcc
+FORT      = gfortran
 
-# # Configure MAGMA make.inc for our setup
-# cat > make.inc << EOF
-# CC        = gcc
-# CXX       = g++
-# NVCC      = nvcc
-# FORT      = gfortran
+ARCH      = ar
+ARCHFLAGS = cr
+RANLIB    = ranlib
 
-# ARCH      = ar
-# ARCHFLAGS = cr
-# RANLIB    = ranlib
+OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
+F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
+FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
+NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
 
-# OPTS      = -O3 -DADD_ -Wall -Wno-unused-function -fPIC -fopenmp -mtune=native
-# F77OPTS   = -O3 -DADD_ -Wall -Wno-unused-dummy-argument -fPIC -fopenmp -mtune=native
-# FOPTS     = -O3 -DADD_ -Wall -x f95-cpp-input -fPIC -fopenmp -mtune=native
-# NVOPTS    = -O3 -DADD_ -Xcompiler -fPIC -Xcompiler "-DADD_"
+GPU_TARGET = Hopper
 
-# GPU_TARGET = Hopper
+LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
 
-# LIB       = -lopenblas -lcudart -lcublas -lcusparse -lcusolver
+CUDADIR   = $CUDA_PATH
+OPENBLASDIR = /usr/share/doc/libopenblas-dev
 
-# CUDADIR   = $CUDA_PATH
-# OPENBLASDIR = /usr/share/doc/libopenblas-dev
+LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
+INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
+DEVCCFLAGS = -std=c++14 -DADD_
+EOF
 
-# LIBDIR    = -L\$(CUDADIR)/lib64 -L\$(OPENBLASDIR)/lib
-# INC       = -I\$(CUDADIR)/include -I\$(OPENBLASDIR)/include
-# DEVCCFLAGS = -std=c++14 -DADD_
-# EOF
-
-# make -j${NPROC}
-# sudo make install prefix=/usr/local/magma
+make -j${NPROC}
+sudo make install prefix=/usr/local/magma
 cd ${INSTALL_PREFIX}/src
 
+fi
 
 
 
 # -- ELPA --
 # Eigensolver for Petaflop-Scale Applications.
-echo "Downloading and compiling ELPA..."
 cd ${INSTALL_PREFIX}/src
+if [ -d /usr/local/elpa ]; then
+echo "ELPA directory already exists."
+else
+if [ -d ${INSTALL_PREFIX}/src/elpa-2025.06.001 ]; then
+cd elpa-2025.06.001
+else
+echo "Downloading and compiling ELPA..."
 wget https://elpa.mpcdf.mpg.de/software/tarball-archive/Releases/2025.06.001/elpa-2025.06.001.tar.gz
 tar -xzvf elpa-2025.06.001.tar.gz
 cd elpa-2025.06.001
+fi
 make distclean || true
-mkdir build
+mkdir -p build
 cd build
 ../configure --prefix=/usr/local/elpa CC=mpicc CXX=mpicxx FC=mpifort F77=mpifort CFLAGS="-O3 -mtune=native" CXXFLAGS="-O3 -mtune=native" FCFLAGS="-O3 -mtune=native" FFLAGS="-O3 -mtune=native" LIBS="-lstdc++ -lm" --enable-openmp --disable-sse-kernels --disable-avx-kernels --disable-avx2-kernels --disable-sse-assembly-kernels --disable-avx512-kernels --enable-neon-arch64-kernels --with-NVIDIA-GPU-compute-capability=sm_90 --enable-nvidia-gpu-kernels --with-cusolver=yes --with-cuda-path=${CUDA_PATH} --with-mpi=yes
 make -j${NPROC}
 make install
 cd ${INSTALL_PREFIX}/src
+fi
 
 #--- LIBVDWXC references
 # region LIBVDWXC references install
@@ -212,88 +228,109 @@ pip install numpy==1.26.4 scipy ase wheel mpi4py dftd4 cupy-cuda12x
 #--- GPAW
 #region GPAW install
 
+# Extra precaution since some servers don't allow access to /root,
+# yet they set ~/=/root. Dumb
+export LD_LIBRARY_PATH=/usr/local/fftw/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/magma/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/elpa/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+export LIBRARY_PATH=/usr/local/fftw/lib:$LIBRARY_PATH
+export LIBRARY_PATH=/usr/local/magma/lib:$LIBRARY_PATH
+export LIBRARY_PATH=/usr/local/elpa/lib:$LIBRARY_PATH
+export LIBRARY_PATH=/usr/local/cuda/lib64:$LIBRARY_PATH
+
+export C_INCLUDE_PATH=/usr/local/fftw/include:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/magma/include:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/modules:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/include:$C_INCLUDE_PATH
+export C_INCLUDE_PATH=/usr/local/cuda/include:$C_INCLUDE_PATH
+
+export GPAW_CONFIG=/home/ubuntu/.gpaw/siteconfig.py
+
 # Start the siteconfig.py file
 cat > siteconfig.py << EOF
-libraries = []
-library_dirs = []
-include_dirs = []
-extra_link_args = []
-extra_compile_args = []
-runtime_library_dirs = []
-define_macros = []
-
-mpi = True
-scalapack = True
+mpi         = True
+scalapack   = True
+fftw        = True
+libxc       = True
+elpa        = True
+magma       = True
+#libvdwxc   = True
+use_cuda    = True
+gpu         = True
 parallel_python_interpreter = True
 
-library_dirs += ['/usr/lib/aarch64-linux-gnu']
-libraries += ['stdc++','pthread', 'm', 'dl']
+compiler    = 'mpicc'
+mpicompiler = 'mpicc'
 
-library_dirs += ['/usr/lib']
-include_dirs += ['/usr/include']
+library_dirs    += ['/usr/lib/aarch64-linux-gnu']
+library_dirs    += ['/usr/lib']
+include_dirs    += ['/usr/include']
+
+# ELPA configuration
+if elpa:
+    libraries       += ['elpa_openmp']
+    library_dirs    += ['/usr/local/elpa/lib']
+    include_dirs    += ['/usr/local/elpa/include/elpa_openmp-2025.06.001/modules', '/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/include', '/usr/local/elpa/include/elpa_openmp-2025.06.001/elpa/']
+
+# Scalapack
+if scalapack:
+    define_macros   += [('GPAW_NO_UNDERSCORE_CSCALAPACK', '1')]
+    define_macros   += [('GPAW_FFTW_UNDERSCORE_BLACS', '1')]
+    libraries       += [ 'scalapack-openmpi' ]
+
+# MAGMA
+if magma:
+    libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'magma']
+    library_dirs += ['/usr/local/magma/lib']
+    include_dirs += ['/usr/local/magma/include']
 
 # FFTW3
-fftw = True
 if fftw:
     libraries += ['fftw3']
     library_dirs += ['/usr/local/fftw/lib']
     include_dirs += ['/usr/local/fftw/include']
 
 # LibXC
-libxc = True
-libraries += ['xc']
+if libxc:
+    libraries += ['xc']
 
-# ELPA configuration
-elpa = True
-if elpa:
-    libraries += ['elpa_openmp']
-    library_dirs += ['/usr/local/elpa/lib']
-    include_dirs += ['/usr/local/elpa/modules']
+libraries   += [ 'blas' ]
+
+# MPI
+if mpi:
+    libraries           += ['mpi']
+    extra_compile_args  += ['-O3', '-march=native', '-mtune=native', '-fopenmp']
+    extra_link_args     = ['-fopenmp']
 
 # LibvdWXC
-# libvdwxc = True
-# libraries += ['vdwxc']
+if libvdwxc:
+#   libraries += ['vdwxc']
 
-# MAGMA
-magma = True
-if magma:
-    libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'magma']
-    library_dirs += ['/usr/local/magma/lib']
-    include_dirs += ['/usr/local/magma/include']
-
-compiler = 'mpicc'
-mpicompiler = 'mpicc'
-
-libraries += ['scalapack-openmpi', 'blas' ]
-
-mpi = True
-if mpi:
-    libraries += ['mpi']
-
-extra_compile_args += ['-O3', '-march=native', '-mtune=native', '-fopenmp']
-extra_link_args = ['-fopenmp']
-
-use_cuda = True
-gpu = True
-
-define_macros += [('GPAW_NO_UNDERSCORE_CSCALAPACK', '1')]
+# GPU
 if gpu:
-    define_macros += [('GPAW_CUDA', '1')]
-    libraries += ['cudart', 'cuda', 'cublas', 'cusolver', 'cufft']
-    library_dirs += ['/usr/local/cuda/lib64']
-    include_dirs += ['/usr/local/cuda/include']
-    gpu_target = 'cuda'
-    gpu_compiler = 'nvcc'
-    gpu_compile_args = ['-O3', '-g', '-gencode', 'arch=compute_90,code=sm_90']
+    define_macros   += [('GPAW_CUDA', '1')]
+    libraries       += ['cudart', 'cuda', 'cublas', 'cusolver', 'cufft']
+    library_dirs    += ['/usr/local/cuda/lib64']
+    include_dirs    += ['/usr/local/cuda/include']
+    gpu_target      = 'cuda'
+    gpu_compiler    = 'nvcc'
+    gpu_compile_args= ['-O3', '-g', '-gencode', 'arch=compute_90,code=sm_90']
+
+libraries   += [ 'stdc++','pthread', 'm', 'dl', 'gfortran' ]
 EOF
 
 # siteconfig.py is built. Saving locally and copying instead of moving.
 # This allows the user to make changes if there were mistakes.
-mkdir /home/ubuntu/.gpaw
+mkdir -p /home/ubuntu/.gpaw
 cp siteconfig.py /home/ubuntu/.gpaw/siteconfig.py
 
 # Run the install for gpaw
-LDFLAGS="-L/usr/lib/aarch64-linux-gnu" pip install gpaw
+#LDFLAGS="-L/usr/lib/aarch64-linux-gnu" pip install gpaw
+pip install gpaw
 
 gpaw info
 #endregion
