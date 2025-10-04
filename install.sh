@@ -342,3 +342,12 @@ pip install gpaw
 
 gpaw info
 #endregion
+
+# Explicitly add paths to bashrc
+BASHRC="$HOME/.bashrc"
+EXPORT_LINE='export LD_LIBRARY_PATH=/usr/local/elpa/lib:/usr/local/magma/lib:/usr/local/cuda/lib64:/usr/local/fftw/lib:$LD_LIBRARY_PATH'
+echo "$EXPORT_LINE" >> "$BASHRC"
+
+# Run source ~/.bashrc
+source ~/.bashrc
+source "${VENV_PATH}/bin/activate"
