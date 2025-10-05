@@ -18,9 +18,11 @@ HOME_PATH="/home/ubuntu"
 # Set the bash location and the install directory
 BASH_FILE="${HOME_PATH}/.bashrc"
 INSTALL_PATH="${HOME_PATH}/gpaw_install"
+mkdir -p $INSTALL_PATH
 
 # Setup the path for the actual code (where our python code/environment will be)
 CODE_PATH="${HOME_PATH}/code"
+mkdir -p $CODE_PATH
 
 VENV_NAME=".venv"
 VENV_PATH="${CODE_PATH}/${VENV_NAME}"  
@@ -43,18 +45,18 @@ FFTW_PATH=$ABS_LIB_PATH
 
 
 # Set the library name
-FFTW_LIB_NAME="fftw3-mpi"
-BLAS_LIB_NAME="openblas64"
+FFTW_LIB_NAME="fftw3"
+BLAS_LIB_NAME="openblas"
 MPI_LIB_NAME="mpi"
 SCLPCK_LIB_NAME="scalapack-openmpi"
-LPCK_LIB_NAME="lapack64"
+LPCK_LIB_NAME="lapack"
 LBXC_LIB_NAME="xc"
 
 ELPA_LIB_NAME="elpa_openmp"
 MAGMA_LIB_NAME="magma"
 
 # Custom Paths
-BLAS_PATH="$ABS_LIB_PATH/openblas64-openmp"
+BLAS_PATH="$ABS_LIB_PATH"
 
 # Set the versions of each software
 ELPA_VER="2023.11.001"
@@ -85,7 +87,7 @@ sudo apt-get update -y
 sudo apt-get install -y build-essential gfortran autoconf libtool pkg-config cmake curl wget tar g++ libstdc++-12-dev automake
 
 # Install packages we won't explicitly compile
-sudo apt-get install -y libopenmpi-dev libscalapack-mpi-dev libopenblas64-openmp-dev libudev-dev
+sudo apt-get install -y libopenmpi-dev libscalapack-mpi-dev libopenblas-dev libopenblas0 libudev-dev
 
 #endregion
 
@@ -122,19 +124,27 @@ sudo apt-get install -y libfftw3-dev libfftw3-mpi-dev libxc-dev
 #region
 echo "Installing LibvdWXC..."
 cd $INSTALL_PATH
-git clone https://gitlab.com/libvdwxc/libvdwxc.git
-cd libvdwxc
+if [ -d ${VDW_PATH} ]; then
+    cd $INSTALL_PATH
+else
+    if [ -d ${INSTALL_PATH/libvdwxc} ]; then
+        cd libvdwxc
+    else
+        git clone https://gitlab.com/libvdwxc/libvdwxc.git
+        cd libvdwxc
+    fi
 
-autoreconf -i
+    autoreconf -i
 
-./configure --prefix=$VDW_PATH \
-    CC=mpicc \
-    --enable-shared \
-    --enable-static \
-    CFLAGS="-O3 -march=native -fPIC"
+    ./configure --prefix=$VDW_PATH \
+        CC=mpicc \
+        --enable-shared \
+        --enable-static \
+        CFLAGS="-O3 -march=native -fPIC"
 
-make -j${NPROC}
-sudo make install
+    make -j${NPROC}
+    sudo make install
+fi
 #endregion
 
 
@@ -185,17 +195,20 @@ ELPA_INCLUDE_DIR=$(find ${ELPA_PATH}/include -type d -name "elpa*" | head -n 1)
 
 #-- MAGMA --
 #region
+cd ${INSTALL_PATH}
 if [ -d ${MAGMA_PATH} ]; then
     echo "MAGMA directory already exists."
 else
 
     if [ -d ${INSTALL_PATH}/${MAGMA_NM} ]; then
-        cd $MAGMA_NM
+        cd ${INSTALL_PATH}/${MAGMA_NM}
     else
         wget https://icl.utk.edu/projectsfiles/magma/downloads/$MAGMA_NM.tar.gz
         tar -zxvf $MAGMA_NM.tar.gz
-        cd $MAGMA_NM
+        cd ${INSTALL_PATH}/${MAGMA_NM}
     fi
+
+    mkdir -p build && cd build
 
     # Configure with CUDA compatibility. Server has GH200 = Hopper Target/sm_90
     cmake .. \
@@ -215,7 +228,6 @@ else
 
     make -j${NPROC}
     sudo make install prefix=$MAGMA_PATH
-    cd ${INSTALL_PREFIX}/src
 
 fi
 #endregion
@@ -279,7 +291,7 @@ fftw        = True
 libxc       = True
 elpa        = True
 magma       = True
-#libvdwxc   = True
+libvdwxc    = True
 use_cuda    = True
 gpu         = True
 parallel_python_interpreter = True
@@ -295,12 +307,12 @@ include_dirs    += ['${GEN_INCL}']
 if elpa:
     libraries       += ['${ELPA_LIB_NAME}']
     library_dirs    += ['${ELPA_PATH}/lib']
-    include_dirs    += ['${ELPA_INCLUDE_DIR}/modules', '${ELPA_INCLUDE_DIR}/elpa/include', '${ELPA_INCLUDE_DIR}/elpa']
+    include_dirs    += ['${ELPA_INCLUDE_DIR}/modules', '${ELPA_INCLUDE_DIR}', '${ELPA_INCLUDE_DIR}/elpa']
 
 # Scalapack
 if scalapack:
-    define_macros   += [('GPAW_NO_UNDERSCORE_CSCALAPACK', '1')]
-    define_macros   += [('GPAW_FFTW_UNDERSCORE_BLACS', '1')]
+    #define_macros   += [('GPAW_NO_UNDERSCORE_CSCALAPACK', '1')]
+    #define_macros   += [('GPAW_FFTW_UNDERSCORE_BLACS', '1')]
     libraries       += [ '${SCLPCK_LIB_NAME}' ]
 
 # MAGMA
@@ -376,4 +388,4 @@ EOF
 
 # Run source ~/.bashrc
 source ~/.bashrc
-source "${VENV_PATH}/bin/activate"
+#source "${VENV_PATH}/bin/activate"
