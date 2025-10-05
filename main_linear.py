@@ -32,7 +32,7 @@ sub_Es             = {}
 qmat_Es            = {}
 het_Es             = {}
 
-save_path          = os.path.join( os.getcwd(), "DFT Output DFTD4", "bulk" )
+save_path          = os.path.join( os.getcwd(), "DFT Output DFTD4" )
 bulk_path          = os.path.join( save_path, "bulk" )
 qm_path            = os.path.join( save_path, "2D materials" )
 het_path           = os.path.join( save_path, "heterostructures" )
@@ -46,7 +46,7 @@ os.makedirs( sub_path, exist_ok = True )
 # XCs
 xc_list     = { 
     'PBE-D4':'PBE',
-    #'r2SCAND4': 'MGGA_X_R2SCAN+MGGA_C_R2SCAN'
+    'r2SCAND4': 'MGGA_X_R2SCAN+MGGA_C_R2SCAN'
 }
 
 # Material specifics
@@ -426,7 +426,6 @@ def create_wse2( vacuum = 5.0 ):
 
 
 #endregion
-
 
 #### Build bulk materials
 #region Build bulk
